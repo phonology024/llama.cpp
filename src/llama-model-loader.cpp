@@ -1516,7 +1516,9 @@ bool llama_model_loader::load_all_data(
     }
 
     // Buffer size: balance between memory usage and I/O efficiency
-    const size_t buffer_size = alignment != 1 ? LLAMA_DIRECT_IO_BUFFER_SIZE + 2 * alignment : 1 * 1024 * 1024;
+    // 16 MiB: with 1 MiB chunks the per-chunk read + event sync dominated the async upload (a 12 GB model on
+    // Vulkan/Windows loaded ~1.2 s faster with 16 MiB; 64-256 MiB and 8-16 buffers gave no further gain)
+    const size_t buffer_size = alignment != 1 ? LLAMA_DIRECT_IO_BUFFER_SIZE + 2 * alignment : 16 * 1024 * 1024;
 
     std::vector<ggml_backend_buffer_t> host_buffers;
     std::vector<ggml_backend_event_t> events;
